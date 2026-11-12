@@ -313,3 +313,194 @@ func TestYAML(t *testing.T) {
 		t.Error("Unmarshal accepted 5MB")
 	}
 }
+
+func FuzzSizeUnmarshalText(f *testing.F) {
+	for _, s := range []string{
+		"0", "4096", "007", "0KiB", "1KiB", "5MiB", "1.5GiB", "0.5KiB", "2TiB",
+		"8388607TiB", "9223372036854775806", "unlimited",
+		"", "-1", "MiB", "1.", ".5MiB", "1.2.3MiB", "1MiB2", "5 MiB", "5KB", "5mib",
+		"Unlimited", "1.5", "0.1KiB", "9223372036854775807", "8388608TiB",
+		"99999999999999999999999999999999999999TiB",
+	} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, in string) {
+		s := Size(42)
+		err := s.UnmarshalText([]byte(in))
+		if err != nil {
+			// A failed parse must leave the target alone so callers never see a half value.
+			if s != 42 {
+				t.Fatalf("value changed to %d on error for %q", int64(s), in)
+			}
+			return
+		}
+		// A size is a byte count, so it can never be negative or wrap around.
+		if s < 0 {
+			t.Fatalf("%q parsed to negative size %d", in, int64(s))
+		}
+		// Only the word "unlimited" may produce the reserved maximum value.
+		if s.Unlimited() != (in == unlimitedWord) {
+			t.Fatalf("%q parsed to %d, unlimited mismatch", in, int64(s))
+		}
+		// What a size writes must read back as the same size, or saved files would drift.
+		text, err := s.MarshalText()
+		if err != nil {
+			t.Fatalf("MarshalText(%d): %v", int64(s), err)
+		}
+		var back Size
+		if err := back.UnmarshalText(text); err != nil {
+			t.Fatalf("re-parse of %q (from %q): %v", text, in, err)
+		}
+		if back != s {
+			t.Fatalf("round trip of %q via %q gave %d, want %d", in, text, int64(back), int64(s))
+		}
+	})
+}
+
+func FuzzDurationUnmarshalText(f *testing.F) {
+	for _, s := range []string{
+		"0", "0s", "1s", "30s", "1.5s", "0.000000001s", "90m", "0.5h", "2h", "1d", "30d",
+		"1.5d", "unlimited",
+		"", "-1s", "-0", "1h30m", "5", "00", "0.0", "5ms", "5w", "5S", "5 s", "s",
+		"0.0000000001s", "9223372036854775807s", "106752d", "106751d",
+		"99999999999999999999999999999999999999d", "Unlimited",
+	} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, in string) {
+		d := Duration(42)
+		err := d.UnmarshalText([]byte(in))
+		if err != nil {
+			// A failed parse must leave the target alone so callers never see a half value.
+			if d != 42 {
+				t.Fatalf("value changed to %d on error for %q", int64(d), in)
+			}
+			return
+		}
+		// A configured duration cannot be negative, which would mean an overflow wrapped.
+		if d < 0 {
+			t.Fatalf("%q parsed to negative duration %d", in, int64(d))
+		}
+		// Only the word "unlimited" may produce the reserved maximum value.
+		if d.Unlimited() != (in == unlimitedWord) {
+			t.Fatalf("%q parsed to %d, unlimited mismatch", in, int64(d))
+		}
+		// What a duration writes must read back as the same duration, or saved files drift.
+		text, err := d.MarshalText()
+		if err != nil {
+			t.Fatalf("MarshalText(%d): %v", int64(d), err)
+		}
+		var back Duration
+		if err := back.UnmarshalText(text); err != nil {
+			t.Fatalf("re-parse of %q (from %q): %v", text, in, err)
+		}
+		if back != d {
+			t.Fatalf("round trip of %q via %q gave %d, want %d", in, text, int64(back), int64(d))
+		}
+	})
+}
+
+// FuzzDurationString covers String for every value, including negative ones that
+// UnmarshalText never produces.
+func FuzzDurationString(f *testing.F) {
+	for _, v := range []int64{
+		0, 1, 1500000000, 1000000001, -1, -1000000000, 86400000000000, math.MaxInt64,
+		math.MaxInt64 - 1, math.MinInt64,
+	} {
+		f.Add(v)
+	}
+	f.Fuzz(func(t *testing.T, v int64) {
+		d := Duration(v)
+		text := d.String()
+		// A rendering must never be empty, or a written file would hold a blank value.
+		if text == "" {
+			t.Fatalf("Duration(%d).String() is empty", v)
+		}
+		if d < 0 {
+			return
+		}
+		// Every non-negative duration must survive being written and read back.
+		var back Duration
+		if err := back.UnmarshalText([]byte(text)); err != nil {
+			t.Fatalf("Duration(%d) rendered as %q, which does not parse: %v", v, text, err)
+		}
+		if back != d {
+			t.Fatalf("Duration(%d) rendered as %q, which parses to %d", v, text, int64(back))
+		}
+	})
+}
+
+// FuzzSizeString covers String for every value, including negative ones that
+// UnmarshalText never produces.
+func FuzzSizeString(f *testing.F) {
+	for _, v := range []int64{
+		0, 1, 1023, 1024, 1<<20 + 1, 5 << 20, 7 << 40, -1, math.MaxInt64, math.MinInt64,
+	} {
+		f.Add(v)
+	}
+	f.Fuzz(func(t *testing.T, v int64) {
+		s := Size(v)
+		text := s.String()
+		// A rendering must never be empty, or a written file would hold a blank value.
+		if text == "" {
+			t.Fatalf("Size(%d).String() is empty", v)
+		}
+		if s < 0 {
+			return
+		}
+		// Every non-negative size must survive being written and read back.
+		var back Size
+		if err := back.UnmarshalText([]byte(text)); err != nil {
+			t.Fatalf("Size(%d) rendered as %q, which does not parse: %v", v, text, err)
+		}
+		if back != s {
+			t.Fatalf("Size(%d) rendered as %q, which parses to %d", v, text, int64(back))
+		}
+	})
+}
+
+func FuzzYAML(f *testing.F) {
+	for _, s := range []string{
+		"cache: 5MiB\nage: 30d\n",
+		"cache: 4096\nage: 0\n",
+		"cache: unlimited\nage: unlimited\n",
+		"cache: 5MB\n",
+		"cache: [1, 2]\n",
+		"cache: {a: b}\nage: ~\n",
+		"cache: 1.5\nage: 1.5\n",
+		"cache: -1\n",
+		"age: 1h30m\n",
+		"cache: &a 5MiB\nage: *a\n",
+		"",
+		": :\n\t",
+	} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, in string) {
+		var doc struct {
+			Cache Size     `yaml:"cache"`
+			Age   Duration `yaml:"age"`
+		}
+		// Untrusted config text must produce an error, never a panic.
+		if err := yaml.Unmarshal([]byte(in), &doc); err != nil {
+			return
+		}
+		// Decoding through YAML must hold the same bounds as decoding plain text.
+		if doc.Cache < 0 || doc.Age < 0 {
+			t.Fatalf("%q decoded to negative values %d, %d", in, int64(doc.Cache), int64(doc.Age))
+		}
+		// A decoded document must encode and decode again unchanged.
+		out, err := yaml.Marshal(doc)
+		if err != nil {
+			t.Fatalf("Marshal: %v", err)
+		}
+		back := doc
+		back.Cache, back.Age = 1, 1
+		if err := yaml.Unmarshal(out, &back); err != nil {
+			t.Fatalf("re-decode of %q: %v", out, err)
+		}
+		if back != doc {
+			t.Fatalf("round trip of %q gave %+v, want %+v", in, back, doc)
+		}
+	})
+}

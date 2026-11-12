@@ -6,6 +6,10 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `units`: fuzz tests for the size and duration parsing, and `make fuzz` to run them.
+
 ## [0.1.0] - 2026-11-11
 
 ### Added

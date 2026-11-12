@@ -1,6 +1,10 @@
 # SpliceFS common
 
 [![CI](https://github.com/SpliceFS/common/actions/workflows/ci.yml/badge.svg)](https://github.com/SpliceFS/common/actions/workflows/ci.yml)
+[![Security](https://github.com/SpliceFS/common/actions/workflows/security.yml/badge.svg)](https://github.com/SpliceFS/common/actions/workflows/security.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/SpliceFS/common/badge)](https://scorecard.dev/viewer/?uri=github.com/SpliceFS/common)
+[![Go Report Card](https://goreportcard.com/badge/github.com/SpliceFS/common)](https://goreportcard.com/report/github.com/SpliceFS/common)
+[![Go Reference](https://pkg.go.dev/badge/github.com/SpliceFS/common.svg)](https://pkg.go.dev/github.com/SpliceFS/common)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 The Go packages that the SpliceFS [server](https://github.com/SpliceFS/server) and

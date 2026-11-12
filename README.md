@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/SpliceFS/common/actions/workflows/ci.yml/badge.svg)](https://github.com/SpliceFS/common/actions/workflows/ci.yml)
 [![Security](https://github.com/SpliceFS/common/actions/workflows/security.yml/badge.svg)](https://github.com/SpliceFS/common/actions/workflows/security.yml)
+[![Coverage](https://codecov.io/gh/SpliceFS/common/graph/badge.svg)](https://codecov.io/gh/SpliceFS/common)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/SpliceFS/common/badge)](https://scorecard.dev/viewer/?uri=github.com/SpliceFS/common)
 [![Go Report Card](https://goreportcard.com/badge/github.com/SpliceFS/common)](https://goreportcard.com/report/github.com/SpliceFS/common)
 [![Go Reference](https://pkg.go.dev/badge/github.com/SpliceFS/common.svg)](https://pkg.go.dev/github.com/SpliceFS/common)

@@ -6,6 +6,8 @@
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/SpliceFS/common/badge)](https://scorecard.dev/viewer/?uri=github.com/SpliceFS/common)
 [![Go Report Card](https://goreportcard.com/badge/github.com/SpliceFS/common)](https://goreportcard.com/report/github.com/SpliceFS/common)
 [![Go Reference](https://pkg.go.dev/badge/github.com/SpliceFS/common.svg)](https://pkg.go.dev/github.com/SpliceFS/common)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16607/badge)](https://www.bestpractices.dev/projects/16607)
+[![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=SpliceFS_common&metric=alert_status)](https://sonarcloud.io/summary/overall?id=SpliceFS_common)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 The Go packages that the SpliceFS [server](https://github.com/SpliceFS/server) and

@@ -11,7 +11,13 @@ build:
 	go build ./...
 
 # Everything CI runs except the linter.
-check: fmt-check vet cover
+check: fmt-check vet cover tracked-files
+
+# A compiled program or a very large file must never be committed: a program built on a
+# developer's machine carries the folder names of that machine.
+.PHONY: tracked-files
+tracked-files:
+	scripts/tracked-files.sh
 
 fmt:
 	gofmt -w .
@@ -45,8 +51,14 @@ fuzz:
 check-linux:
 	$(LINUX_RUN) sh -c 'cp -r /src /tmp/w && cd /tmp/w && make check'
 
-lint:
+# ShellCheck runs with every optional check on (see .shellcheckrc).
+lint: lint-shell
 	golangci-lint run
+
+# The shell part of lint by itself, for the CI job that has no Go tools.
+.PHONY: lint-shell
+lint-shell:
+	shellcheck scripts/*.sh
 
 clean:
 	rm -rf bin coverage.out coverage.html

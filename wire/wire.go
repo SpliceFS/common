@@ -34,13 +34,13 @@ type LoginResponse struct {
 // Node is one member of a cluster.
 type Node struct {
 	Name string `json:"name" yaml:"name"`
-	URL  string `json:"url" yaml:"url"`
+	URL  string `json:"url"  yaml:"url"`
 }
 
 // Nodes is the body of GET /v1/nodes and the content of a node list file.
 type Nodes struct {
 	Cluster string `json:"cluster" yaml:"cluster"`
-	Nodes   []Node `json:"nodes" yaml:"nodes"`
+	Nodes   []Node `json:"nodes"   yaml:"nodes"`
 }
 
 // Entry is one name in a directory listing. ETag is empty for directories.

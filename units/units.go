@@ -6,6 +6,7 @@
 package units
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -17,17 +18,21 @@ import (
 
 // quantityPattern splits a value into integer digits, fraction digits and a
 // unit. The unit is whatever follows the number and is checked separately.
-var quantityPattern = regexp.MustCompile(`^([0-9]+)(?:\.([0-9]+))?([^0-9.]*)$`)
+var quantityPattern = regexp.MustCompile(`^(\d+)(?:\.(\d+))?([^0-9.]*)$`)
 
 const unlimitedWord = "unlimited"
 
-// Errors reported by parseScaled. They are wrapped with the offending value by
-// the callers.
+// decimalBase is the base of the digits in a configuration value.
+const decimalBase = 10
+
+// Errors reported when a size or duration cannot be parsed. UnmarshalText wraps
+// them with the offending value, so callers test for them with errors.Is.
 var (
-	errNoNumber = fmt.Errorf("not a number followed by a unit")
-	errNoUnit   = fmt.Errorf("missing unit")
-	errNotWhole = fmt.Errorf("does not come to a whole number of base units")
-	errTooLarge = fmt.Errorf("too large")
+	ErrNoNumber    = errors.New("not a number followed by a unit")
+	ErrNoUnit      = errors.New("missing unit")
+	ErrUnknownUnit = errors.New("unknown unit")
+	ErrNotWhole    = errors.New("does not come to a whole number of base units")
+	ErrTooLarge    = errors.New("too large")
 )
 
 // parseScaled parses a non-negative integer or decimal number followed by a
@@ -35,39 +40,40 @@ var (
 // whole number of base units and must be smaller than math.MaxInt64, which is
 // reserved for "unlimited".
 func parseScaled(text string, multiplier func(unit string) (int64, bool)) (int64, error) {
-	m := quantityPattern.FindStringSubmatch(text)
-	if m == nil {
-		return 0, errNoNumber
+	match := quantityPattern.FindStringSubmatch(text)
+	if match == nil {
+		return 0, ErrNoNumber
 	}
-	mult, ok := multiplier(m[3])
-	if !ok {
-		if m[3] == "" {
-			return 0, errNoUnit
+	wholeDigits, fractionDigits, unit := match[1], match[2], match[3]
+	scale, known := multiplier(unit)
+	if !known {
+		if unit == "" {
+			return 0, ErrNoUnit
 		}
-		return 0, fmt.Errorf("unknown unit %q", m[3])
+		return 0, fmt.Errorf("%w %q", ErrUnknownUnit, unit)
 	}
-	num := digitsToInt(m[1] + m[2])
-	num.Mul(num, big.NewInt(mult))
-	den := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(len(m[2]))), nil)
-	quo, rem := new(big.Int).QuoRem(num, den, new(big.Int))
-	if rem.Sign() != 0 {
-		return 0, errNotWhole
+	numerator := digitsToInt(wholeDigits + fractionDigits)
+	numerator.Mul(numerator, big.NewInt(scale))
+	denominator := new(big.Int).Exp(big.NewInt(decimalBase), big.NewInt(int64(len(fractionDigits))), nil)
+	quotient, remainder := new(big.Int).QuoRem(numerator, denominator, new(big.Int))
+	if remainder.Sign() != 0 {
+		return 0, ErrNotWhole
 	}
-	if !quo.IsInt64() || quo.Int64() == math.MaxInt64 {
-		return 0, errTooLarge
+	if !quotient.IsInt64() || quotient.Int64() == math.MaxInt64 {
+		return 0, ErrTooLarge
 	}
-	return quo.Int64(), nil
+	return quotient.Int64(), nil
 }
 
 // digitsToInt converts a string of decimal digits to a big integer.
 func digitsToInt(digits string) *big.Int {
-	n := new(big.Int)
-	ten := big.NewInt(10)
-	for _, c := range digits {
-		n.Mul(n, ten)
-		n.Add(n, big.NewInt(int64(c-'0')))
+	number := new(big.Int)
+	base := big.NewInt(decimalBase)
+	for _, digit := range digits {
+		number.Mul(number, base)
+		number.Add(number, big.NewInt(int64(digit-'0')))
 	}
-	return n
+	return number
 }
 
 // Size is a number of bytes. In YAML it is written as a whole number of bytes,
@@ -79,20 +85,39 @@ const UnlimitedSize Size = math.MaxInt64
 
 const sizeAccepted = `use a whole number of bytes, a number followed by KiB, MiB, GiB or TiB, or "unlimited"`
 
+// sizeUnit is a binary size suffix and the number of bytes it stands for.
+type sizeUnit struct {
+	suffix string
+	bytes  Size
+}
+
+// Byte counts of the binary size units. They are untyped so they are not members of
+// the Size enumeration that String switches over.
+const (
+	bytesPerKiB = 1 << 10
+	bytesPerMiB = 1 << 20
+	bytesPerGiB = 1 << 30
+	bytesPerTiB = 1 << 40
+)
+
+// sizeUnits lists the accepted suffixes, largest first. It is a function so that no
+// package-level variable can be changed by a caller.
+func sizeUnits() [4]sizeUnit {
+	return [...]sizeUnit{
+		{"TiB", bytesPerTiB}, {"GiB", bytesPerGiB}, {"MiB", bytesPerMiB}, {"KiB", bytesPerKiB},
+	}
+}
+
 // sizeMultiplier returns the number of bytes in a size unit. The empty unit
 // means bytes.
 func sizeMultiplier(unit string) (int64, bool) {
-	switch unit {
-	case "":
+	if unit == "" {
 		return 1, true
-	case "KiB":
-		return 1 << 10, true
-	case "MiB":
-		return 1 << 20, true
-	case "GiB":
-		return 1 << 30, true
-	case "TiB":
-		return 1 << 40, true
+	}
+	for _, candidate := range sizeUnits() {
+		if candidate.suffix == unit {
+			return int64(candidate.bytes), true
+		}
 	}
 	return 0, false
 }
@@ -107,11 +132,11 @@ func (s *Size) UnmarshalText(text []byte) error {
 		*s = UnlimitedSize
 		return nil
 	}
-	n, err := parseScaled(value, sizeMultiplier)
+	bytes, err := parseScaled(value, sizeMultiplier)
 	if err != nil {
 		return fmt.Errorf("invalid size %q: %w (%s)", value, err, sizeAccepted)
 	}
-	*s = Size(n)
+	*s = Size(bytes)
 	return nil
 }
 
@@ -128,16 +153,12 @@ func (s Size) String() string {
 	case 0:
 		return "0"
 	}
-	units := []struct {
-		suffix string
-		size   Size
-	}{{"TiB", 1 << 40}, {"GiB", 1 << 30}, {"MiB", 1 << 20}, {"KiB", 1 << 10}}
-	for _, u := range units {
-		if s%u.size == 0 {
-			return strconv.FormatInt(int64(s/u.size), 10) + u.suffix
+	for _, unit := range sizeUnits() {
+		if s%unit.bytes == 0 {
+			return strconv.FormatInt(int64(s/unit.bytes), decimalBase) + unit.suffix
 		}
 	}
-	return strconv.FormatInt(int64(s), 10)
+	return strconv.FormatInt(int64(s), decimalBase)
 }
 
 // Duration is a length of time. In YAML it is written as a number followed by
@@ -150,17 +171,29 @@ const UnlimitedDuration Duration = math.MaxInt64
 
 const durationAccepted = `use a number followed by s, m, h or d, or 0, or "unlimited"`
 
-// durationUnits lists the accepted suffixes, largest first.
-var durationUnits = [...]struct {
+// durationUnit is a duration suffix and the length of time it stands for.
+type durationUnit struct {
 	suffix string
 	length time.Duration
-}{{"d", 24 * time.Hour}, {"h", time.Hour}, {"m", time.Minute}, {"s", time.Second}}
+}
+
+// hoursPerDay is the length of the "d" suffix. A day is always 24 hours here, with
+// no regard for time zones.
+const hoursPerDay = 24
+
+// durationUnits lists the accepted suffixes, largest first. It is a function so that
+// no package-level variable can be changed by a caller.
+func durationUnits() [4]durationUnit {
+	return [...]durationUnit{
+		{"d", hoursPerDay * time.Hour}, {"h", time.Hour}, {"m", time.Minute}, {"s", time.Second},
+	}
+}
 
 // durationMultiplier returns the number of nanoseconds in a duration unit.
 func durationMultiplier(unit string) (int64, bool) {
-	for _, u := range durationUnits {
-		if u.suffix == unit {
-			return int64(u.length), true
+	for _, candidate := range durationUnits() {
+		if candidate.suffix == unit {
+			return int64(candidate.length), true
 		}
 	}
 	return 0, false
@@ -184,11 +217,11 @@ func (d *Duration) UnmarshalText(text []byte) error {
 		*d = 0
 		return nil
 	}
-	n, err := parseScaled(value, durationMultiplier)
+	nanoseconds, err := parseScaled(value, durationMultiplier)
 	if err != nil {
 		return fmt.Errorf("invalid duration %q: %w (%s)", value, err, durationAccepted)
 	}
-	*d = Duration(n)
+	*d = Duration(nanoseconds)
 	return nil
 }
 
@@ -209,9 +242,9 @@ func (d Duration) String() string {
 	case d < 0:
 		return time.Duration(d).String()
 	}
-	for _, u := range durationUnits {
-		if time.Duration(d)%u.length == 0 {
-			return strconv.FormatInt(int64(time.Duration(d)/u.length), 10) + u.suffix
+	for _, unit := range durationUnits() {
+		if time.Duration(d)%unit.length == 0 {
+			return strconv.FormatInt(int64(time.Duration(d)/unit.length), decimalBase) + unit.suffix
 		}
 	}
 	whole, frac := time.Duration(d)/time.Second, time.Duration(d)%time.Second

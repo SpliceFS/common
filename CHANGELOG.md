@@ -21,3 +21,6 @@ notable ones.
 - Code quality checks at their strictest: every linter is on, and each one that is off says
   why in `.golangci.yml`. `units` now declares its errors (`ErrNoNumber`, `ErrNoUnit`,
   `ErrUnknownUnit`, `ErrNotWhole`, `ErrTooLarge`), so callers can test for them.
+- `make lint` also runs ShellCheck, with every optional check on, and `make check` fails when a
+  compiled program or a file over 1 MiB is tracked.
+

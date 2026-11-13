@@ -23,4 +23,5 @@ notable ones.
   `ErrUnknownUnit`, `ErrNotWhole`, `ErrTooLarge`), so callers can test for them.
 - `make lint` also runs ShellCheck, with every optional check on, and `make check` fails when a
   compiled program or a file over 1 MiB is tracked.
-
+- `make check` fails when a tracked file names a private machine, account or place, and the
+  ignore rules cover programs built in place, editor leftovers and disk images.

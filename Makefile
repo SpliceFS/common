@@ -52,8 +52,12 @@ check-linux:
 	$(LINUX_RUN) sh -c 'cp -r /src /tmp/w && cd /tmp/w && make check'
 
 # ShellCheck runs with every optional check on (see .shellcheckrc).
-lint:
+lint: lint-shell
 	golangci-lint run
+
+# The shell part of lint by itself, for the CI job that has no Go tools.
+.PHONY: lint-shell
+lint-shell:
 	shellcheck scripts/*.sh
 
 clean:

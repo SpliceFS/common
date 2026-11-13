@@ -48,6 +48,13 @@ linters:
       min-complexity: 15
     gocritic:
       enable-all: true
+      settings:
+        # The check wants every argument over 80 bytes passed by pointer, for speed. An
+        # options struct is passed by value on purpose: the function gets its own copy and
+        # cannot change the caller's, and it is passed once, not in a loop. The limit is
+        # raised far enough for those and still catches a copy that would cost.
+        hugeParam:
+          sizeThreshold: 256
     govet:
       enable-all: true
       disable:
@@ -78,6 +85,14 @@ linters:
         # message types has as many as the protocol has messages.
         - name: max-public-structs
           disabled: true
+    # Log values are passed as typed attributes (slog.String, slog.Int), never as loose
+    # key and value pairs: a missing value or a key that is not a string cannot compile.
+    sloglint:
+      attr-only: true
+      no-global: all
+      context: scope
+      static-msg: true
+      key-naming-case: snake
     staticcheck:
       checks:
         - all

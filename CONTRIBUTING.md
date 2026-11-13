@@ -25,20 +25,50 @@ make fmt          # rewrite files with gofmt
 
 `make check` and `make lint` are exactly what CI runs. If both pass locally, CI will pass.
 
-## Branches
+## Branches and pull requests
 
-SpliceFS uses the gitflow branching model.
+There is one long-lived branch, `main`. It is protected: no direct pushes, no force pushes, no
+deletion, and the checks must pass before a merge.
 
-- `main` holds released code only. Every commit on it is a release and carries a version tag.
-- `develop` is where work comes together. It is the default branch, and pull requests target it.
-- `feature/<name>` branches start from `develop` and merge back into it by pull request.
-- `release/<version>` branches start from `develop` when a release is prepared. They take only
-  fixes and the changelog, and merge into `main` and back into `develop`.
-- `hotfix/<version>` branches start from `main` for urgent fixes and merge into `main` and
-  `develop`.
+Every change is a pull request into `main` from its own branch. Name the branch
+`feature/<name>`, `bug/<name>`, or anything else that describes the change.
 
-`main` and `develop` are protected: no direct pushes, no force pushes, no deletion, and CI
-must pass before a merge.
+### Change scope
+
+The description of a pull request must contain exactly one line that states the scope of the
+change:
+
+```
+change_scope: revision
+```
+
+| Value | Meaning | Version |
+| --- | --- | --- |
+| `revision` | a fix or a change that keeps every client and server working together | `X.Y.Z` becomes `X.Y.(Z+1)` |
+| `minor` | a new feature, or anything that changes how client and server talk | `X.Y.Z` becomes `X.(Y+1).0` |
+| `major` | never merged | a new major version is a new repository named `<name>_v<major>` |
+
+The pull request template has the line. A missing or invalid line fails the check, whatever the
+tests say.
+
+### The version
+
+The release bot reads the version of `main`, raises it by the scope, and adds one commit to your
+branch that writes it to the file `VERSION`. Do not edit `VERSION` by hand. The one exception is
+a pull request from a fork, where the bot cannot push: set `VERSION` to the value the failing
+check names.
+
+### Keeping the branch current
+
+A branch must sit on the tip of `main`. When `main` moves, the bot rebuilds every open pull
+request on the new tip and sets its version again, so expect force-pushes to your branch. Run
+`git pull --rebase` (or reset to the remote branch) before you add commits. If the rebuild hits
+a conflict, the bot leaves the branch as it is and says so in a comment. Rebase it by hand and
+push.
+
+### Merging
+
+A pull request merges with one merge commit. Squash and fast-forward merges are off.
 
 ## Standards
 
@@ -90,9 +120,9 @@ must pass before a merge.
 - One logical change per pull request. Keep refactoring separate from behavior changes.
 - Commit subjects are imperative and at most 72 characters ("Add block scheduler", not
   "Added" or "Adds"). The body explains why, not what.
-- Update [CHANGELOG.md](CHANGELOG.md) under **Unreleased** for anything a user would notice.
+- Update [CHANGELOG.md](CHANGELOG.md) for anything a user would notice.
 - A change to `wire` comes with the matching change to the design document of the server.
-- A pull request targets `develop` and needs passing CI. Approval by a second maintainer
+- A pull request targets `main` and needs passing CI. Approval by a second maintainer
   becomes a requirement as soon as the project has one.
 
 ## What CI checks
@@ -100,6 +130,8 @@ must pass before a merge.
 | Workflow | What it does |
 |---|---|
 | CI | format, vet, tests with the race detector on the two supported Go releases, the 100% coverage gate, a build, and `golangci-lint` (which includes the `gosec` security rules) |
+| Rules | on pull requests: checks the `change_scope` line and the `VERSION` file the bot sets |
+| Main | on every push to `main`: tags the new version and rebuilds the open pull requests |
 | Security | `govulncheck` for known vulnerabilities in dependencies and the standard library, CodeQL static analysis, and a dependency review on pull requests. Also runs weekly. |
 | SonarQube | quality and security rating on SonarQube Cloud. Skipped until a maintainer has set it up. |
 
@@ -115,26 +147,22 @@ The Scorecard workflow needs no setup.
 
 ## Versioning and releases
 
-SpliceFS follows [Semantic Versioning](https://semver.org).
+Versions are `0.x.y` for now, with no suffixes. The promise about compatibility:
 
-- **Patch** (`0.3.1`): bug fixes only.
-- **Minor** (`0.4.0`): new features. Before 1.0.0, a minor release may also make an
-  incompatible change; the changelog says so under a **Changed** heading.
-- **Major** (`1.0.0` and later): incompatible changes to an exported identifier or to the
-  JSON a type produces.
+- Below 1.0.0 nothing is promised, even between a client and a server of the same version.
+- From 1.0.0 on, with the same first number, a client works with every server whose second
+  number is equal or higher. The third number never matters, barring a bug; a bug that
+  affects it is fixed by raising the second number on both sides.
+
+Every merge into `main` is a release. The merge is tagged `v<VERSION>` automatically. Nobody
+creates tags or release branches by hand. One change, one version.
+
+This repository has no Release workflow. The tag is the release, because the tag is the
+version that the [server](https://github.com/SpliceFS/server) and the
+[client](https://github.com/SpliceFS/client) name in their `go.mod` files.
 
 The HTTP API has its own version in the URL (`/v1/`). A server keeps serving an API version
 for as long as a supported client release uses it.
-
-A release is cut by a maintainer:
-
-1. Start `release/X.Y.Z` from `develop`.
-2. Move the **Unreleased** entries in `CHANGELOG.md` under a new version heading with the date
-   and commit as `Release vX.Y.Z`.
-3. Merge the branch into `main` by pull request, with a merge commit.
-4. Tag that merge commit `vX.Y.Z` and push the tag. The version printed by `--version` comes
-   from the tag at build time, and the tag starts the publish job.
-5. Merge `main` back into `develop`.
 
 ## License
 

@@ -15,6 +15,7 @@ linters:
     # Demands every field in every struct literal. Go's zero values are part of the
     # language, and the code relies on them on purpose.
     - exhaustruct
+    - exhaustruct_v5
     # Replaced by gomodguard_v2, which is on. The old one only prints a deprecation notice.
     - gomodguard
     # Demands tests in a package of their own. The 100% coverage gate needs tests that

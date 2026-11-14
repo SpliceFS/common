@@ -4,6 +4,11 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.3.5] - 2026-11-14
+
+- Internal: contributors are told to merge `main` down to fix a branch the bot cannot rebuild.
+  Nothing changes for users.
+
 ## [0.3.4] - 2026-11-14
 
 - Internal: a release of common no longer opens a pull request in the server. Whoever changes common

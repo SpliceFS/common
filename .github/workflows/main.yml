@@ -1,7 +1,7 @@
 name: Main
 
-# When main moves, the new version is tagged, which starts the release, and every open pull
-# request is rebuilt on the new tip. See https://github.com/SpliceFS/.github
+# When main moves, the new version is tagged, which starts the release, every open pull
+# request is rebuilt on the new tip, and the server is moved to the new version. See https://github.com/SpliceFS/.github
 on:
   push:
     branches: [main]
@@ -14,3 +14,14 @@ jobs:
     uses: SpliceFS/.github/.github/workflows/main-moved-v1.yml@main
     secrets:
       bot-private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
+  # A new version of the shared code is of use only once the programs are built with it. So
+  # its release opens the pull request that moves the server to it, with the same change
+  # scope, and the server's release then does the same for the client.
+  server:
+    needs: main
+    uses: SpliceFS/.github/.github/workflows/follow-common-v1.yml@main
+    with:
+      repository: server
+    secrets:
+      merge-bot-token: ${{ secrets.MERGE_BOT_TOKEN }}

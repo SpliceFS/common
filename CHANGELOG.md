@@ -4,6 +4,11 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.3.3] - 2026-11-14
+
+- Internal: a failed release, merge or scheduled check opens an issue that emails the owner. Nothing
+  changes for users.
+
 ## [0.3.2] - 2026-11-14
 
 - The protocol names the server and client version headers and the digests a block request carries.

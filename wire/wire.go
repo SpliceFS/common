@@ -16,10 +16,29 @@ const HeadDigestBytes = 64 << 10
 // hex-encoded SHA-256 of its last TailDigestBytes bytes, or of the whole file when it is
 // shorter. Head and tail together tell two copies apart that have the same size and
 // time, in constant time whatever the size of the file.
+//
+// A client sends both HeaderHeadDigest and HeaderTailDigest on every block (range)
+// request, with the values it chose the file by. The server answers 412 Precondition
+// Failed when the file no longer has them, so a client never mixes blocks of two
+// different copies of a file.
 const HeaderTailDigest = "X-SpliceFS-Tail-Digest"
 
 // TailDigestBytes is how much of the end of a file the tail digest covers.
 const TailDigestBytes = 64 << 10
+
+// HeaderServerVersion carries the version of the server on every response. A client
+// reads it to learn which server it talks to.
+//
+// Either side ends the exchange when the versions are not compatible: the major
+// versions must be equal, and the server minor must be equal to or higher than the
+// client minor. A newer server can therefore serve an older client, but not the other
+// way round.
+const HeaderServerVersion = "X-SpliceFS-Server-Version"
+
+// HeaderClientVersion carries the version of the client on every request. A request
+// without it comes from a client older than this rule. The server accepts it, because
+// the rule lets an older client minor work with a newer server.
+const HeaderClientVersion = "X-SpliceFS-Client-Version"
 
 // Health is the body of GET /v1/health.
 type Health struct {

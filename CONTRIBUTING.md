@@ -101,6 +101,12 @@ A pull request merges with one merge commit. Squash and fast-forward merges are 
   module imports neither program.
 - Every package here is public. Renaming or removing an exported identifier, or changing the
   JSON a type produces, breaks both programs and is an incompatible change.
+- Nothing moves the server or the client to a new version of this module by itself, because
+  whether a change here is compatible is a judgment no workflow can make. Whoever changes this
+  module, a person or an AI, decides whether the change is backward compatible, says which in
+  the pull request, and then updates the server and the client accordingly, each with its own
+  pull request that raises `go.mod`. When the change is incompatible, the server goes first and
+  is released before the client moves, so that no client is ever newer than every server.
 
 ### Tests
 

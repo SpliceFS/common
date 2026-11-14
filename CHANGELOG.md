@@ -1,11 +1,10 @@
 # Changelog
 
-All notable changes to this project are recorded here. Every merge into `main` is a
-release with its own version, so there are no version headings: the
-[release page](../../releases) of a version names its change, and this file collects the
-notable ones.
+Every merge into `main` is a release with its own version. From 0.3.0 on this file has one
+heading per version, newest first, written by the release bot from the pull request. The
+changes before that are in one list, below the newer versions.
 
-## Changes
+## [0.1.1 to 0.2.3]
 
 ### Added
 

@@ -4,6 +4,11 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.3.0] - 2026-11-14
+
+- The protocol names a second digest of a file, the tail digest: the SHA-256 of its last 64 KiB,
+  sent in the header `X-SpliceFS-Tail-Digest`.
+
 ## [0.1.1 to 0.2.3]
 
 ### Added

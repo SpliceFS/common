@@ -12,6 +12,15 @@ const HeaderHeadDigest = "X-SpliceFS-Head-Digest"
 // HeadDigestBytes is how much of the start of a file the head digest covers.
 const HeadDigestBytes = 64 << 10
 
+// HeaderTailDigest carries the tail digest of a file on HEAD responses: the
+// hex-encoded SHA-256 of its last TailDigestBytes bytes, or of the whole file when it is
+// shorter. Head and tail together tell two copies apart that have the same size and
+// time, in constant time whatever the size of the file.
+const HeaderTailDigest = "X-SpliceFS-Tail-Digest"
+
+// TailDigestBytes is how much of the end of a file the tail digest covers.
+const TailDigestBytes = 64 << 10
+
 // Health is the body of GET /v1/health.
 type Health struct {
 	Status  string `json:"status"`

@@ -33,11 +33,12 @@ type Claims struct {
 
 // Allows reports whether the token allows the named share.
 func (c Claims) Allows(share string) bool {
-	return allowsShare(c.Shares, share)
+	return SharesAllow(c.Shares, share)
 }
 
-// allowsShare reports whether shares lists share or the wildcard.
-func allowsShare(shares []string, share string) bool {
+// SharesAllow reports whether a share list allows the named share: it lists the share or
+// the wildcard "*". It is the one place of this rule, for tokens and for user records.
+func SharesAllow(shares []string, share string) bool {
 	for _, s := range shares {
 		if s == allShares || s == share {
 			return true

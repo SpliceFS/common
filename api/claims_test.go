@@ -2,7 +2,7 @@ package api
 
 import "testing"
 
-func TestClaimsAllows(t *testing.T) {
+func TestSharesAllow(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name   string
@@ -20,6 +20,9 @@ func TestClaimsAllows(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			if got := SharesAllow(tt.shares, tt.share); got != tt.want {
+				t.Errorf("SharesAllow(%q, %q) = %v, want %v", tt.shares, tt.share, got, tt.want)
+			}
 			if got := (Claims{Shares: tt.shares}).Allows(tt.share); got != tt.want {
 				t.Errorf("Allows(%q) = %v, want %v", tt.share, got, tt.want)
 			}

@@ -4,6 +4,14 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.4.0] - 2026-11-19
+
+- New package api: the HTTP API handler of the server, with the share, login and node list
+  interfaces it uses.
+- New package remote: the client of one server node, including the version check.
+- New package apitest: runs the real API handler over loopback TCP with in-memory shares, logins and
+  node lists, for tests of servers and clients.
+
 ## [0.3.5] - 2026-11-14
 
 - Internal: contributors are told to merge `main` down to fix a branch the bot cannot rebuild.

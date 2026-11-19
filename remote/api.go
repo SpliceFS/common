@@ -77,7 +77,7 @@ func (n *Node) List(ctx context.Context, token, dir string) ([]wire.Entry, error
 	// while the header is left unset here.
 	var listing wire.Listing
 	request := call{operation: operation, method: http.MethodGet, path: path, token: token}
-	err := fetch(ctx, n, request, maxListingJSON, &listing)
+	err := fetch(ctx, n, request, n.maxListing, &listing)
 	return listing.Entries, err
 }
 

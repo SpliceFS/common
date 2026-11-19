@@ -18,6 +18,9 @@ type Node struct {
 	// clientVersion is the version of the program using this package. The server's version
 	// is compared with it, and it names the program in the user agent.
 	clientVersion string
+	// maxListing bounds the JSON of one directory listing. It is a field, not only the
+	// constant, so that tests can reach the limit with a small body.
+	maxListing int64
 }
 
 // New returns a client for the node called name whose API lives at baseURL, for example
@@ -46,6 +49,7 @@ func New(name, baseURL, clientVersion string, client *http.Client) (*Node, error
 		host:          parsed.Host,
 		client:        client,
 		clientVersion: clientVersion,
+		maxListing:    maxListingJSON,
 	}, nil
 }
 

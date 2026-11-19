@@ -44,6 +44,16 @@ func runList(n *Node) error {
 	return err
 }
 
+// testListingLimit stands in for the listing limit of New, so that a listing at or over
+// the limit is small enough to be quick under the race detector.
+const testListingLimit = 1 << 10
+
+// runSmallList is runList with the listing limit lowered to testListingLimit.
+func runSmallList(n *Node) error {
+	n.maxListing = testListingLimit
+	return runList(n)
+}
+
 // runRange reads no data; it reports the error of the call, or of closing the reader.
 func runRange(n *Node) error {
 	body, err := n.Range(context.Background(), testToken, "s/f", "e", 0, 1)
@@ -188,8 +198,8 @@ func TestJSONProtocolViolations(t *testing.T) {
 		{
 			name:        "listing too large",
 			contentType: json,
-			body:        `{"entries":[]}` + strings.Repeat(" ", maxListingJSON),
-			run:         runList,
+			body:        `{"entries":[]}` + strings.Repeat(" ", testListingLimit),
+			run:         runSmallList,
 		},
 	}
 	for _, tt := range tests {
@@ -211,10 +221,21 @@ func TestJSONProtocolViolations(t *testing.T) {
 func TestListingAtTheLimitIsAccepted(t *testing.T) {
 	t.Parallel()
 	body := `{"entries":[]}`
-	body += strings.Repeat(" ", maxListingJSON-len(body))
+	body += strings.Repeat(" ", testListingLimit-len(body))
 	n := serve(t, func(w http.ResponseWriter, _ *http.Request) { writeJSON(t, w, 200, body) })
-	if _, err := n.List(context.Background(), testToken, "s"); err != nil {
+	if err := runSmallList(n); err != nil {
 		t.Fatalf("List: %v", err)
+	}
+}
+
+func TestNewAllowsListingsOf16MiB(t *testing.T) {
+	t.Parallel()
+	n, err := New("east", "http://east.example/api", devVersion, http.DefaultClient)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if n.maxListing != 16<<20 {
+		t.Errorf("listing limit = %d, want %d", n.maxListing, 16<<20)
 	}
 }
 

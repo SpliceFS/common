@@ -118,8 +118,8 @@ func TestServerVersionOnEveryAnswer(t *testing.T) {
 			if resp.StatusCode != tt.status {
 				t.Errorf("status = %d, want %d", resp.StatusCode, tt.status)
 			}
-			if got := resp.Header.Get(serverVersionHeader); got != "v9.8.7" {
-				t.Errorf("%s = %q, want v9.8.7", serverVersionHeader, got)
+			if got := resp.Header.Get(wire.HeaderServerVersion); got != "v9.8.7" {
+				t.Errorf("%s = %q, want v9.8.7", wire.HeaderServerVersion, got)
 			}
 		})
 	}

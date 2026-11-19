@@ -217,13 +217,7 @@ func dirInfo(name string, mtime time.Time) api.Info {
 
 func fileInfo(name string, stored storedFile) api.Info {
 	size := int64(len(stored.content))
-	return api.Info{Name: path.Base(name), Size: size, MTime: stored.mtime, ETag: etag(size, stored.mtime)}
-}
-
-// etag is the tag a real share gives a file: size and modification time, so a change of
-// content alone keeps the tag and only the digests tell the versions apart.
-func etag(size int64, mtime time.Time) string {
-	return fmt.Sprintf(`"%x-%x-%x"`, size, mtime.Unix(), mtime.Nanosecond())
+	return api.Info{Name: path.Base(name), Size: size, MTime: stored.mtime, ETag: api.ETag(size, stored.mtime)}
 }
 
 func digestsOf(content []byte) api.FileDigests {

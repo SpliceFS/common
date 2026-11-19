@@ -116,7 +116,7 @@ func TestGetCompressedFile(t *testing.T) {
 	if got := gunzip(t, resp); got != plain {
 		t.Errorf("decompressed body differs: %d bytes, want %d", len(got), len(plain))
 	}
-	wantETag := strings.TrimSuffix(etag(int64(len(plain)), testTime()), `"`) + `-gzip"`
+	wantETag := strings.TrimSuffix(ETag(int64(len(plain)), testTime()), `"`) + `-gzip"`
 	for name, want := range map[string]string{
 		"Content-Encoding":       "gzip",
 		"Vary":                   "Accept-Encoding",
@@ -151,7 +151,7 @@ func TestGetFileIsNotCompressedWhen(t *testing.T) {
 		{"gzip is refused", html, []string{"Accept-Encoding", "gzip;q=0"}, 200, "Accept-Encoding"},
 		{"only identity is accepted", html, []string{"Accept-Encoding", "identity"}, 200, "Accept-Encoding"},
 		{"there is a Range", html, []string{"Accept-Encoding", "gzip", "Range", "bytes=0-9"}, 206, "Accept-Encoding"},
-		{"there is an If-Match", html, withGzip("If-Match", etag(13*200, testTime())), 200, "Accept-Encoding"},
+		{"there is an If-Match", html, withGzip("If-Match", ETag(13*200, testTime())), 200, "Accept-Encoding"},
 		{"there is an If-None-Match", html, withGzip("If-None-Match", `"x"`), 200, "Accept-Encoding"},
 		{"there is an If-Range", html, withGzip("If-Range", `"x"`), 200, "Accept-Encoding"},
 		{
@@ -244,7 +244,7 @@ func TestListingsAreCompressedAboveOneKiB(t *testing.T) {
 	for i := range 100 {
 		name := "file-with-a-long-name-" + strings.Repeat("x", i%7) + string(rune('a'+i%26)) + ".zzz"
 		infos = append(infos, Info{
-			Name: name, Size: int64(i), MTime: testTime(), ETag: etag(int64(i), testTime()),
+			Name: name, Size: int64(i), MTime: testTime(), ETag: ETag(int64(i), testTime()),
 		})
 	}
 	fixture.media.dirs["big"] = infos

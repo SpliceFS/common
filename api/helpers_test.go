@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -112,7 +111,7 @@ func fileInfo(name string, data fileData) Info {
 		Name:  name[strings.LastIndex(name, "/")+1:],
 		Size:  int64(len(data.content)),
 		MTime: testTime(),
-		ETag:  etag(int64(len(data.content)), testTime()),
+		ETag:  ETag(int64(len(data.content)), testTime()),
 	}
 }
 
@@ -197,7 +196,7 @@ func newEnv(t *testing.T, mutate ...func(*Options)) *env {
 		},
 		dirs: map[string][]Info{
 			".": {
-				{Name: "blob.zzz", Size: 10, MTime: testTime(), ETag: etag(10, testTime())},
+				{Name: "blob.zzz", Size: 10, MTime: testTime(), ETag: ETag(10, testTime())},
 				{Name: "sub", Dir: true, MTime: testTime()},
 			},
 			"sub":       {},
@@ -369,10 +368,4 @@ func decodeBody(t *testing.T, raw string, v any) {
 // logger returns a logger that writes JSON lines to the log buffer of the env.
 func (e *env) logger() *slog.Logger {
 	return slog.New(slog.NewJSONHandler(e.logs, &slog.HandlerOptions{Level: slog.LevelDebug}))
-}
-
-// etag builds a strong tag from size and modification time, the way a real share does.
-// The handler only passes tags through, so any stable format proves the same things.
-func etag(size int64, mtime time.Time) string {
-	return fmt.Sprintf(`"%x-%x-%x"`, size, mtime.Unix(), mtime.Nanosecond())
 }

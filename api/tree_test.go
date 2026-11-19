@@ -85,7 +85,7 @@ func TestListDirectory(t *testing.T) {
 			continue
 		}
 		want := []wire.Entry{
-			{Name: "blob.zzz", Size: 10, MTime: testTime(), ETag: etag(10, testTime())},
+			{Name: "blob.zzz", Size: 10, MTime: testTime(), ETag: ETag(10, testTime())},
 			{Name: "sub", Dir: true, MTime: testTime()},
 		}
 		if len(listing.Entries) != 2 || listing.Entries[0] != want[0] || listing.Entries[1] != want[1] {

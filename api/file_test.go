@@ -12,7 +12,7 @@ import (
 )
 
 // blobETag is the tag of blob.zzz in the fake share.
-func blobETag() string { return etag(10, testTime()) }
+func blobETag() string { return ETag(10, testTime()) }
 
 const lastModified = "Sun, 01 Nov 2026 12:00:00 GMT"
 
@@ -270,7 +270,7 @@ func TestHeadCompressibleFileVariesOnEncoding(t *testing.T) {
 	wantHeader(t, resp, "Vary", "Accept-Encoding")
 	wantHeader(t, resp, "Content-Encoding", "")
 	wantHeader(t, resp, "Content-Length", strconv.Itoa(13*200))
-	wantHeader(t, resp, "ETag", etag(13*200, testTime()))
+	wantHeader(t, resp, "ETag", ETag(13*200, testTime()))
 }
 
 func TestHeadFileErrors(t *testing.T) {

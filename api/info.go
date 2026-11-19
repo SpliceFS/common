@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -34,4 +35,12 @@ type Info struct {
 type FileDigests struct {
 	Head string
 	Tail string
+}
+
+// ETag returns the strong tag of a file of the given size and modification time:
+// "<size hex>-<unix seconds hex>-<nanoseconds hex>", quotes included. The time is used
+// as given, so a share truncates it to its precision first. Content does not enter the
+// tag; the head and tail digests tell apart two versions with the same size and time.
+func ETag(size int64, mtime time.Time) string {
+	return fmt.Sprintf(`"%x-%x-%x"`, size, mtime.Unix(), mtime.Nanosecond())
 }

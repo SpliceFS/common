@@ -16,6 +16,7 @@ module it is built against in its `go.mod`.
 | Package | What it holds |
 |---|---|
 | `api` | the HTTP handler of the API, version 1, and the share and login types it uses |
+| `remote` | the HTTP client for one server node, version 1, with the client half of the version rule |
 | `wire` | the JSON bodies and header names of the HTTP API, version 1 |
 | `units` | the size and duration types used in the configuration files |
 

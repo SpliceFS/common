@@ -4,6 +4,10 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.4.1] - 2026-11-19
+
+- Internal: recorded exchanges prove that released clients keep working with newer servers.
+
 ## [0.4.0] - 2026-11-19
 
 - New package api: the HTTP API handler of the server, with the share, login and node list

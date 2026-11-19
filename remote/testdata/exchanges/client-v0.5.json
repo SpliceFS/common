@@ -1,0 +1,662 @@
+{
+  "client": "v0.5.0",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/health",
+        "header": {
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "status": "ok",
+          "version": "v0.5.0",
+          "node": "east"
+        },
+        "body_size": 48
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/login",
+        "header": {
+          "Content-Type": "application/json",
+          "User-Agent": "splicefs/v0.5.0"
+        },
+        "body": {
+          "user": "alice",
+          "password": "wrong"
+        }
+      },
+      "response": {
+        "status": 401,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "bad credentials"
+        },
+        "body_size": 28
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "path": "/v1/login",
+        "header": {
+          "Content-Type": "application/json",
+          "User-Agent": "splicefs/v0.5.0"
+        },
+        "body": {
+          "user": "alice",
+          "password": "<password>"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "token": "<token>",
+          "expires": "2026-11-01T13:00:00Z"
+        },
+        "body_size": 60
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/nodes",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "cluster": "c1",
+          "nodes": [
+            {
+              "name": "east",
+              "url": "<node-url>"
+            }
+          ]
+        },
+        "body_size": 78
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "entries": [
+            {
+              "name": "media",
+              "dir": true,
+              "size": 0,
+              "mtime": "2026-11-01T12:00:00Z"
+            }
+          ]
+        },
+        "body_size": 81
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/media/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "entries": [
+            {
+              "name": "a.txt",
+              "dir": false,
+              "size": 10,
+              "mtime": "2026-11-01T12:00:00Z",
+              "etag": "\"a-6ae729c0-0\""
+            },
+            {
+              "name": "big.bin",
+              "dir": false,
+              "size": 131072,
+              "mtime": "2026-11-01T12:00:00Z",
+              "etag": "\"20000-6ae729c0-0\""
+            },
+            {
+              "name": "empty.txt",
+              "dir": false,
+              "size": 0,
+              "mtime": "2026-11-01T12:00:00Z",
+              "etag": "\"0-6ae729c0-0\""
+            },
+            {
+              "name": "odd dir",
+              "dir": true,
+              "size": 0,
+              "mtime": "2026-11-01T12:00:00Z"
+            },
+            {
+              "name": "sub",
+              "dir": true,
+              "size": 0,
+              "mtime": "2026-11-01T12:00:00Z"
+            }
+          ]
+        },
+        "body_size": 450
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/media/sub/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "entries": [
+            {
+              "name": "page.html",
+              "dir": false,
+              "size": 2600,
+              "mtime": "2026-11-01T12:00:00Z",
+              "etag": "\"a28-6ae729c0-0\""
+            }
+          ]
+        },
+        "body_size": 117
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/media/odd%20dir/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "entries": [
+            {
+              "name": "n ä%#?.txt",
+              "dir": false,
+              "size": 3,
+              "mtime": "2026-11-01T12:00:00Z",
+              "etag": "\"3-6ae729c0-0\""
+            }
+          ]
+        },
+        "body_size": 114
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/space/media",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "total": 100,
+          "free": 40
+        },
+        "body_size": 23
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/empty.txt",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"0-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/a.txt",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"a-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/file/media/a.txt",
+        "header": {
+          "Accept-Encoding": "identity",
+          "Authorization": "Bearer <token>",
+          "If-Match": "\"a-6ae729c0-0\"",
+          "Range": "bytes=3-6",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 206,
+        "header": {
+          "Content-Range": "bytes 3-6/10",
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"a-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "ceaa28bba4caba687dc31b1bbe79eca3c70c33f871f1ce8f528cf9ab5cfd76dd",
+        "body_size": 4
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/big.bin",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/octet-stream",
+          "ETag": "\"20000-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/file/media/big.bin",
+        "header": {
+          "Accept-Encoding": "identity",
+          "Authorization": "Bearer <token>",
+          "If-Match": "\"20000-6ae729c0-0\"",
+          "Range": "bytes=0-65535",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 206,
+        "header": {
+          "Content-Range": "bytes 0-65535/131072",
+          "Content-Type": "application/octet-stream",
+          "ETag": "\"20000-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370",
+        "body_size": 65536
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/big.bin",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "application/octet-stream",
+          "ETag": "\"20000-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/file/media/big.bin",
+        "header": {
+          "Accept-Encoding": "identity",
+          "Authorization": "Bearer <token>",
+          "If-Match": "\"20000-6ae729c0-0\"",
+          "Range": "bytes=65536-131071",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 206,
+        "header": {
+          "Content-Range": "bytes 65536-131071/131072",
+          "Content-Type": "application/octet-stream",
+          "ETag": "\"20000-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "a0a24a08a87ed054cd2e20aa994bcd25e5266f8c5435011ac4982987f4e3a370",
+        "body_size": 65536
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/odd%20dir/n%20%C3%A4%25%23%3F.txt",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"3-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "990cb8ebd0afb7150da453a213036a92f2c05e091df0d803e62d257ea7796c27",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "990cb8ebd0afb7150da453a213036a92f2c05e091df0d803e62d257ea7796c27"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/file/media/odd%20dir/n%20%C3%A4%25%23%3F.txt",
+        "header": {
+          "Accept-Encoding": "identity",
+          "Authorization": "Bearer <token>",
+          "If-Match": "\"3-6ae729c0-0\"",
+          "Range": "bytes=0-2",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 206,
+        "header": {
+          "Content-Range": "bytes 0-2/3",
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"3-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "990cb8ebd0afb7150da453a213036a92f2c05e091df0d803e62d257ea7796c27",
+        "body_size": 3
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/docs/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 403,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "share not allowed"
+        },
+        "body_size": 30
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/none.txt",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 404,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "path": "/v1/tree/media/a.txt/",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 404,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "not found"
+        },
+        "body_size": 22
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/sub",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 404,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "path": "/v1/file/media/a.txt",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 200,
+        "header": {
+          "Content-Type": "text/plain; charset=utf-8",
+          "ETag": "\"a-6ae729c0-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:00 GMT",
+          "X-SpliceFS-Head-Digest": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+          "X-SpliceFS-Server-Version": "v0.5.0",
+          "X-SpliceFS-Tail-Digest": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882"
+        },
+        "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "body_size": 0
+      }
+    },
+    {
+      "before": "change media/a.txt",
+      "request": {
+        "method": "GET",
+        "path": "/v1/file/media/a.txt",
+        "header": {
+          "Accept-Encoding": "identity",
+          "Authorization": "Bearer <token>",
+          "If-Match": "\"a-6ae729c0-0\"",
+          "Range": "bytes=0-3",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 412,
+        "header": {
+          "Content-Type": "application/json",
+          "ETag": "\"a-6ae729c1-0\"",
+          "Last-Modified": "Sun, 01 Nov 2026 12:00:01 GMT",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "precondition failed"
+        },
+        "body_size": 32
+      }
+    },
+    {
+      "before": "limit logins",
+      "request": {
+        "method": "POST",
+        "path": "/v1/login",
+        "header": {
+          "Content-Type": "application/json",
+          "User-Agent": "splicefs/v0.5.0"
+        },
+        "body": {
+          "user": "alice",
+          "password": "<password>"
+        }
+      },
+      "response": {
+        "status": 429,
+        "header": {
+          "Content-Type": "application/json",
+          "Retry-After": "60",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "too many login attempts"
+        },
+        "body_size": 36
+      }
+    },
+    {
+      "before": "expire tokens",
+      "request": {
+        "method": "GET",
+        "path": "/v1/nodes",
+        "header": {
+          "Authorization": "Bearer <token>",
+          "User-Agent": "splicefs/v0.5.0"
+        }
+      },
+      "response": {
+        "status": 401,
+        "header": {
+          "Content-Type": "application/json",
+          "X-SpliceFS-Server-Version": "v0.5.0"
+        },
+        "body": {
+          "error": "token expired"
+        },
+        "body_size": 26
+      }
+    }
+  ]
+}

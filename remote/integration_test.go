@@ -65,6 +65,9 @@ func (c *clock) advance(d time.Duration) {
 type setup struct {
 	serverVersion, clientVersion string
 	noBasePath                   bool
+	// wrap, when set, wraps the transport of the client, so a test can watch or change
+	// what goes over the wire.
+	wrap func(http.RoundTripper) http.RoundTripper
 }
 
 // basePath is where the node serves the API.
@@ -105,6 +108,7 @@ func start(t *testing.T, cfg setup) *fixture {
 	docs := apitest.NewShare(epoch())
 	put(t, docs, "d.txt", "docs")
 	put(t, env.media, "a.txt", smallText)
+	put(t, env.media, "empty.txt", "")
 	put(t, env.media, "sub/page.html", pageText())
 	put(t, env.media, "odd dir/n \u00e4%#?.txt", "odd")
 	put(t, env.media, "big.bin", strings.Repeat("b", bigSize))
@@ -120,6 +124,9 @@ func start(t *testing.T, cfg setup) *fixture {
 	})
 	nodes.Set(wire.Nodes{Cluster: "c1", Nodes: []wire.Node{{Name: "east", URL: env.node.URL()}}})
 	env.http = env.node.Client()
+	if cfg.wrap != nil {
+		env.http.Transport = cfg.wrap(env.http.Transport)
+	}
 	t.Cleanup(env.http.CloseIdleConnections)
 	client, err := remote.New("east", env.node.URL(), cfg.clientVersion, env.http)
 	if err != nil {

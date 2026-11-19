@@ -52,6 +52,25 @@ which is specified in the
 Before 1.0.0 the packages may change in any minor release; every change is listed in the
 [changelog](CHANGELOG.md).
 
+## Older clients against a newer server
+
+A server serves every client with the same major version and an equal or lower minor. The
+proof needs no old program: `remote/testdata/exchanges/client-vMAJOR.MINOR.json` holds every
+request a client of that minor makes and the parts of each answer it relies on (status, the
+headers it reads, the body or its digest), with the token, password and node address replaced
+by placeholders. Every test run replays each file against the current API handler and fails
+on any difference that would break that client. A normal run never rewrites a file.
+
+When a client release raises the minor, set `recordedClient` in
+`remote/exchanges_test.go` to the new version and record its file:
+
+```
+go test ./remote -run TestRecordExchanges -update-exchanges
+```
+
+Commit the new file next to the older ones. A file of a released minor is never re-recorded;
+it is deleted only when that client minor is no longer supported.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

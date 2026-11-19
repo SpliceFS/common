@@ -119,7 +119,7 @@ func start(t *testing.T, cfg setup) *fixture {
 		Auth:   env.auth, Nodes: nodes,
 	})
 	nodes.Set(wire.Nodes{Cluster: "c1", Nodes: []wire.Node{{Name: "east", URL: env.node.URL()}}})
-	env.http = &http.Client{Transport: &http.Transport{}}
+	env.http = env.node.Client()
 	t.Cleanup(env.http.CloseIdleConnections)
 	client, err := remote.New("east", env.node.URL(), cfg.clientVersion, env.http)
 	if err != nil {

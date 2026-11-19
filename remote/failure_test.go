@@ -230,7 +230,7 @@ func TestListingAtTheLimitIsAccepted(t *testing.T) {
 
 func TestNewAllowsListingsOf16MiB(t *testing.T) {
 	t.Parallel()
-	n, err := New("east", "http://east.example/api", devVersion, http.DefaultClient)
+	n, err := New("east", "https://east.example/api", devVersion, http.DefaultClient)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -260,7 +260,7 @@ func TestTransportFailureIsUnavailable(t *testing.T) {
 		}
 	}()
 	closeLater(t, listener)
-	n, err := New("east", "http://"+listener.Addr().String()+"/api", devVersion, &http.Client{})
+	n, err := New("east", "https://"+listener.Addr().String()+"/api", devVersion, &http.Client{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func TestBodyCutOffIsUnavailable(t *testing.T) {
 func TestClientTimeoutIsUnavailableNotContextError(t *testing.T) {
 	t.Parallel()
 	release := make(chan struct{})
-	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-release }))
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-release }))
 	t.Cleanup(srv.Close)
 	t.Cleanup(func() { close(release) })
 	client := srv.Client()

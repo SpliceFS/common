@@ -36,7 +36,7 @@ func answering(t *testing.T, status int, header http.Header, length int64, body 
 		}
 		return resp, nil
 	})}
-	n, err := New("east", "http://node.example/api", devVersion, client)
+	n, err := New("east", "https://node.example/api", devVersion, client)
 	if err != nil {
 		t.Fatal(err)
 	}

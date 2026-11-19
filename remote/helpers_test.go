@@ -23,7 +23,7 @@ func serve(t *testing.T, h http.HandlerFunc) *Node {
 // serveAs is serve for a client of the given version.
 func serveAs(t *testing.T, clientVersion string, h http.HandlerFunc) *Node {
 	t.Helper()
-	srv := httptest.NewServer(h)
+	srv := httptest.NewTLSServer(h)
 	t.Cleanup(srv.Close)
 	n, err := New("east", srv.URL+"/api", clientVersion, srv.Client())
 	if err != nil {

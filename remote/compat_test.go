@@ -198,7 +198,7 @@ func answerAs(t *testing.T, clientVersion string, status int, reported string) *
 
 // hostOf names a test node the way an incompatibility message does.
 func hostOf(n *Node) string {
-	return strings.TrimSuffix(strings.TrimPrefix(n.base, "http://"), "/api")
+	return strings.TrimSuffix(strings.TrimPrefix(n.base, "https://"), "/api")
 }
 
 func TestEveryOperationRefusesAServerWithoutHeader(t *testing.T) {
@@ -332,7 +332,7 @@ func TestRefusalClosesTheBody(t *testing.T) {
 					Request:    r,
 				}, nil
 			})}
-			n, err := New("east", "http://"+testHost+"/api", testClientVersion, client)
+			n, err := New("east", "https://"+testHost+"/api", testClientVersion, client)
 			if err != nil {
 				t.Fatal(err)
 			}

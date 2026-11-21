@@ -59,10 +59,19 @@ type LoginResponse struct {
 	Expires time.Time `json:"expires"`
 }
 
-// Node is one member of a cluster.
+// Node is one member of a cluster. ID, SignKey and EncryptKey are empty, and left out of
+// the JSON, for a node that runs a version which does not publish them.
 type Node struct {
 	Name string `json:"name" yaml:"name"`
 	URL  string `json:"url"  yaml:"url"`
+	// ID is the node id, a UUIDv7.
+	ID string `json:"id,omitempty" yaml:"id,omitempty"`
+	// SignKey is the public Ed25519 key that checks what the node signs, base64 (standard
+	// alphabet) of the 32 key bytes.
+	SignKey string `json:"sign_key,omitempty" yaml:"sign_key,omitempty"`
+	// EncryptKey is the public X25519 key that keys meant for the node alone are sealed
+	// to, base64 (standard alphabet) of the 32 key bytes.
+	EncryptKey string `json:"encrypt_key,omitempty" yaml:"encrypt_key,omitempty"`
 }
 
 // Nodes is the body of GET /v1/nodes and the content of a node list file.

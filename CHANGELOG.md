@@ -4,6 +4,10 @@ Every merge into `main` is a release with its own version. From 0.3.0 on this fi
 heading per version, newest first, written by the release bot from the pull request. The
 changes before that are in one list, below the newer versions.
 
+## [0.5.0] - 2026-11-21
+
+- New: the node list carries each node's id and public keys.
+
 ## [0.4.2] - 2026-11-19
 
 - Internal: a dependency is updated. Nothing changes for users.

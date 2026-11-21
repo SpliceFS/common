@@ -1,12 +1,14 @@
 package remote
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net"
 	"slices"
 	"time"
 )
@@ -38,6 +40,10 @@ type TLSOptions struct {
 	Roots *x509.CertPool
 	// Now returns the time a certificate is checked at. Nil means time.Now.
 	Now func() time.Time
+	// Dial connects for TLSDialer, which runs the handshake over the connection it returns,
+	// so a client keeps its own dialer and adds only the trust check. Nil means the
+	// DialContext of a zero net.Dialer. TLSConfig does not use it.
+	Dial func(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
 // ParseClusterKey decodes a cluster key as `splicefsdctl cluster show` prints it: the

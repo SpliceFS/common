@@ -234,3 +234,49 @@ func TestTLSDialerClosesTheConnectionOfARefusedCertificate(t *testing.T) {
 	}
 	<-server.closed
 }
+
+// standIn is a connection a test dial function returns, so a test can tell it was the one
+// that was used.
+type standIn struct{ net.Conn }
+
+func TestTLSDialerReturnsTheConnectionItHandshook(t *testing.T) {
+	t.Parallel()
+	key := newClusterKey(t)
+	node := clusterNode(t, key, time.Unix(0, 0), time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC))
+	address, err := url.Parse(node.URL())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotNetwork, gotAddr string
+	var made *standIn
+	dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		gotNetwork, gotAddr = network, addr
+		var dialer net.Dialer
+		raw, dialErr := dialer.DialContext(ctx, network, addr)
+		made = &standIn{raw}
+		return made, dialErr
+	}
+	conn, err := remote.TLSDialer(remote.TLSOptions{ClusterKey: key.Public(), Dial: dial})(
+		context.Background(), "tcp", address.Host)
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	defer func() { ignore(conn.Close()) }()
+	if gotNetwork != "tcp" || gotAddr != address.Host {
+		t.Errorf("Dial got %q and %q, want tcp and %q", gotNetwork, gotAddr, address.Host)
+	}
+	secured, ok := conn.(*tls.Conn)
+	if !ok || secured.NetConn() != net.Conn(made) {
+		t.Errorf("the connection is %T over %v, want a TLS connection over the one Dial returned", conn, made)
+	}
+}
+
+func TestTLSDialerReportsAFailedDial(t *testing.T) {
+	t.Parallel()
+	errNoRoute := errors.New("no route")
+	opts := remote.TLSOptions{Dial: func(context.Context, string, string) (net.Conn, error) { return nil, errNoRoute }}
+	conn, err := remote.TLSDialer(opts)(context.Background(), "tcp", "127.0.0.1:443")
+	if conn != nil || !errors.Is(err, errNoRoute) {
+		t.Errorf("dial = %v, %v; want no connection and %v", conn, err, errNoRoute)
+	}
+}

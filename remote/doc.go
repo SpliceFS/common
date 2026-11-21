@@ -6,6 +6,10 @@
 // layers above. Every method takes the context and the bearer token to use, and a Node is
 // safe for concurrent use.
 //
+// The caller configures the *http.Client. TLSConfig gives it the TLS part: the standard
+// verification, or, for a client given the public key of the cluster, that one plus
+// trust in every server whose certificate the cluster key signed.
+//
 // Failures are reported as one of the exported sentinel errors, wrapped with the node name
 // and the operation, so callers branch with errors.Is. When the caller's own context ends,
 // the context's error is returned instead, so "I gave up" can be told from "the node is

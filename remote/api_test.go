@@ -105,6 +105,30 @@ func TestNodes(t *testing.T) {
 	}
 }
 
+func TestNodesReadsNodeIdentity(t *testing.T) {
+	t.Parallel()
+	n := serve(t, func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(t, w, 200, `{"cluster":"c","nodes":[`+
+			`{"name":"east","url":"https://east.example.com/api",`+
+			`"id":"0193b5d0-7c4e-7000-8000-000000000001","sign_key":"c2lnbg==","encrypt_key":"ZW5jcnlwdA=="},`+
+			`{"name":"west","url":"https://west.example.com/api"}]}`)
+	})
+	got, err := n.Nodes(context.Background(), testToken)
+	if err != nil {
+		t.Fatalf("Nodes: %v", err)
+	}
+	want := wire.Nodes{Cluster: "c", Nodes: []wire.Node{
+		{
+			Name: "east", URL: "https://east.example.com/api",
+			ID: "0193b5d0-7c4e-7000-8000-000000000001", SignKey: "c2lnbg==", EncryptKey: "ZW5jcnlwdA==",
+		},
+		{Name: "west", URL: "https://west.example.com/api"},
+	}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Nodes = %+v, want %+v", got, want)
+	}
+}
+
 func TestSpace(t *testing.T) {
 	t.Parallel()
 	n := serve(t, func(w http.ResponseWriter, r *http.Request) {

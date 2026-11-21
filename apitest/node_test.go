@@ -36,6 +36,21 @@ func TestNodeListKeepsItsOwnCopy(t *testing.T) {
 	}
 }
 
+func TestNodeListHoldsNodeIdentity(t *testing.T) {
+	t.Parallel()
+	var list NodeList
+	full := wire.Node{
+		Name: "east", URL: "http://east", ID: "0193b5d0-7c4e-7000-8000-000000000001",
+		SignKey: "c2lnbg==", EncryptKey: "ZW5jcnlwdA==",
+	}
+	old := wire.Node{Name: "west", URL: "http://west"}
+	list.Set(wire.Nodes{Cluster: "c", Nodes: []wire.Node{full, old}})
+	got, err := list.Nodes()
+	if err != nil || len(got.Nodes) != 2 || got.Nodes[0] != full || got.Nodes[1] != old {
+		t.Errorf("Nodes = %+v, %v; want %+v and %+v", got, err, full, old)
+	}
+}
+
 // health asks the node for its health and returns the node name it reports, or the error.
 func health(t *testing.T, client *http.Client, url string) (string, error) {
 	t.Helper()

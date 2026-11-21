@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -563,5 +565,101 @@ func TestCompressedReadIsTheFile(t *testing.T) {
 	plain, err := io.ReadAll(reader)
 	if err != nil || string(plain) != pageText() {
 		t.Errorf("gunzipped body differs from the file: %v", err)
+	}
+}
+
+// The tests below connect a client to a node over real TLS. The node's certificate is
+// signed by a cluster key and names a host the client does not connect to, so a success
+// also shows that host names are not checked for a cluster-signed certificate.
+
+func clusterNode(t *testing.T, signer apitest.ClusterKey, from, until time.Time) *apitest.Node {
+	t.Helper()
+	cert, err := signer.IssueNode([]string{"node.example.test"}, from, until)
+	if err != nil {
+		t.Fatalf("IssueNode: %v", err)
+	}
+	return apitest.StartWithCertificate(t, api.Options{
+		Node: "east", Version: serverVer, Nodes: &apitest.NodeList{},
+	}, cert)
+}
+
+// clientGiven returns the client of node that trusts what a client given key trusts; a
+// nil key is a client without a cluster key.
+func clientGiven(t *testing.T, node *apitest.Node, key ed25519.PublicKey) *remote.Node {
+	t.Helper()
+	address, err := url.Parse(node.URL())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := remote.TLSConfig(address.Hostname(), remote.TLSOptions{ClusterKey: key})
+	if err != nil {
+		t.Fatalf("TLSConfig: %v", err)
+	}
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: cfg}}
+	t.Cleanup(httpClient.CloseIdleConnections)
+	client, err := remote.New("east", node.URL(), clientVer, httpClient)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	return client
+}
+
+func newClusterKey(t *testing.T) apitest.ClusterKey {
+	t.Helper()
+	key, err := apitest.NewClusterKey()
+	if err != nil {
+		t.Fatalf("NewClusterKey: %v", err)
+	}
+	return key
+}
+
+func TestClusterKeyTrustOverTCP(t *testing.T) {
+	t.Parallel()
+	key, other := newClusterKey(t), newClusterKey(t)
+	// Dates no test run can be outside of or inside of by the clock.
+	past, pastEnd := time.Unix(0, 0), time.Unix(86400, 0)
+	always, never := time.Unix(0, 0), time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
+	future := time.Date(9998, 1, 1, 0, 0, 0, 0, time.UTC)
+	tests := []struct {
+		name string
+		// signer signs the node's certificate, from and until bound it; given is the cluster
+		// key the client is given, nil for none.
+		signer      apitest.ClusterKey
+		from, until time.Time
+		given       ed25519.PublicKey
+		trusted     bool
+	}{
+		{name: "client given the cluster key", signer: key, from: always, until: never, given: key.Public(), trusted: true},
+		{name: "client given no key", signer: key, from: always, until: never},
+		{name: "client given another key", signer: key, from: always, until: never, given: other.Public()},
+		{name: "certificate signed by another key", signer: other, from: always, until: never, given: key.Public()},
+		{name: "certificate expired", signer: key, from: past, until: pastEnd, given: key.Public()},
+		{name: "certificate not valid yet", signer: key, from: future, until: never, given: key.Public()},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			client := clientGiven(t, clusterNode(t, tt.signer, tt.from, tt.until), tt.given)
+			health, err := client.Health(context.Background())
+			if tt.trusted {
+				if err != nil || health.Node != "east" {
+					t.Fatalf("Health = %+v, %v; want the node's answer", health, err)
+				}
+				return
+			}
+			if !errors.Is(err, remote.ErrUnavailable) || !strings.Contains(err.Error(), "failed to verify certificate") {
+				t.Errorf("Health error = %v, want the node refused as unavailable for its certificate", err)
+			}
+		})
+	}
+}
+
+func TestClusterKeyClientRefusesASelfSignedNode(t *testing.T) {
+	t.Parallel()
+	node := apitest.Start(t, api.Options{Node: "east", Version: serverVer, Nodes: &apitest.NodeList{}})
+	client := clientGiven(t, node, newClusterKey(t).Public())
+	_, err := client.Health(context.Background())
+	if !errors.Is(err, remote.ErrUnavailable) || !strings.Contains(err.Error(), "failed to verify certificate") {
+		t.Errorf("Health error = %v, want the node refused as unavailable for its certificate", err)
 	}
 }

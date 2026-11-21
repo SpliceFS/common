@@ -3,6 +3,7 @@ package apitest
 import (
 	"crypto"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"io"
 	"log"
@@ -20,7 +21,7 @@ var ErrRunning = errors.New("apitest: node is running")
 
 // Node is api.NewHandler served with TLS over real TCP on 127.0.0.1, the way a server
 // serves by default. Its certificate is made in memory for this node alone; Client
-// trusts it. It holds its port from
+// trusts it, unless the certificate was given (see StartWithCertificate). It holds its port from
 // Start to the end of the test, also while it is stopped: a stopped node accepts each
 // connection and closes it at once, so the client sees a node that is gone, and no
 // other listener can take the port before Restart.
@@ -42,6 +43,14 @@ func Start(tb testing.TB, opts api.Options) *Node {
 	return startWith(tb, opts, newECDSAKey)
 }
 
+// StartWithCertificate is Start with a certificate the caller made, for example one that
+// ClusterKey.IssueNode issued. Client trusts no certificate of such a node, so a test
+// builds the client that trusts it, and a test that expects a refusal gets one.
+func StartWithCertificate(tb testing.TB, opts api.Options, certificate tls.Certificate) *Node {
+	tb.Helper()
+	return begin(tb, opts, identity{certificate: certificate, pool: x509.NewCertPool()})
+}
+
 // startWith is Start with the maker of the certificate key, so a test can make it fail.
 func startWith(tb testing.TB, opts api.Options, newKey func() (crypto.Signer, error)) *Node {
 	tb.Helper()
@@ -50,6 +59,12 @@ func startWith(tb testing.TB, opts api.Options, newKey func() (crypto.Signer, er
 		tb.Fatalf("%v", err)
 		return nil
 	}
+	return begin(tb, opts, ident)
+}
+
+// begin serves the handler of opts with the certificate of ident.
+func begin(tb testing.TB, opts api.Options, ident identity) *Node {
+	tb.Helper()
 	// An unstarted test server holds a port on 127.0.0.1, opened and closed the way
 	// httptest does it; the node takes its connections and serves them with servers of
 	// its own.

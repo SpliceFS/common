@@ -25,7 +25,8 @@ type Node struct {
 
 // New returns a client for the node called name whose API lives at baseURL, for example
 // "https://east.example.com/api". The URL must be absolute with an http or https scheme.
-// All requests go through client, which the caller configures (TLS, timeouts, proxies).
+// All requests go through client, which the caller configures (TLS, see TLSConfig,
+// timeouts, proxies).
 // Leave the transport's compression enabled: listings rely on it for transparent gzip.
 // clientVersion is the calling program's version, such as "v0.4.4" or "dev"; this package
 // cannot know it, because it belongs to the program, not to the library.

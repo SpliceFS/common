@@ -8,7 +8,9 @@
 //
 // The caller configures the *http.Client. TLSConfig gives it the TLS part: the standard
 // verification, or, for a client given the public key of the cluster, that one plus
-// trust in every server whose certificate the cluster key signed.
+// trust in every server whose certificate the cluster key signed. TLSDialer does the same
+// for a transport that serves many hosts of one cluster, by building the configuration for
+// each host it dials.
 //
 // Failures are reported as one of the exported sentinel errors, wrapped with the node name
 // and the operation, so callers branch with errors.Is. When the caller's own context ends,
